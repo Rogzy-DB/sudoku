@@ -310,7 +310,7 @@ PUBLIC_PAGE = re.sub(r"/\*.*?\*/", "", PAGE, flags=re.S)
 PUBLIC_FOOT = ('<footer class="credits"><span class="muted small">Sans compte : tes parties restent '
                'liées à ce navigateur.</span><br><span class="muted small">Créé par '
                '<a href="https://rogzy.org/">Rogzy</a> &amp; Luna · '
-               '<a href="https://github.com/Rogzy-DB">GitHub</a> · © 2026 Rogzy · '
+               '<a href="https://github.com/Rogzy-DB/sudoku">GitHub</a> · © 2026 Rogzy · '
                '<a href="https://opensource.org/license/mit">licence MIT</a></span></footer>')
 
 
