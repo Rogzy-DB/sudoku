@@ -103,6 +103,9 @@ PAGE = """<!doctype html>
    because a div holding nothing is short. */
 .entry .board { touch-action:auto; grid-template-rows:repeat(9,1fr); }
 details.paste, details.fix { margin-top:var(--sp-3); }
+/* le kit ne donne AUCUNE marge sous .section-head : « 31/81 · … » et « N coups »
+   touchaient la grille et le menu (mesuré 0 px à 390 et 1200, Rogzy 06/10) */
+.section-head { margin-bottom:var(--sp-3); }
 /* ⚠ 44, not 36: a <summary> is a tap target like any other and the kit's layout check
    measures it at 390 (it caught this one at 324×36). `display:flex` is what makes
    min-height bind at all — on the default `display:list-item` the height is a
@@ -1321,7 +1324,7 @@ def _move_detail(st):
             f'</div>')
 
 
-def assistant_page(cells_s="", elims_s="", pick=None, err=""):
+def assistant_page(cells_s="", elims_s="", pick=None, err="", played=False):
     """Rogzy 2026-09-15: *« une option / tab assistant, ou je peux ecrir ma grille
     actuel, faire indicie, et ca me propose des solution, a la fois de crayons, de
     réduction des crayon par guess, puis de la resolution case par case mais en me
@@ -1387,13 +1390,18 @@ def assistant_page(cells_s="", elims_s="", pick=None, err=""):
         # a fix folded out of sight is a fix he has to go looking for.
         # …and a box I could not read re-opens them too: naming R1C5 and then
         # folding R1C5 out of sight is half an error message
-        op = " open" if (doubled or n_sol == 0 or err) else ""
-        body.append(
-            f'<section class="card"><details class="fix"{op}><summary>✏️ Corriger '
-            'la grille</summary><p class="muted small">Une correction repart des '
-            'chiffres seuls : les éliminations déjà jouées avaient été prouvées '
-            'sur l\'ancienne grille, elles ne valent plus rien sur celle-ci.</p>'
-            + entry + '</details></section>')
+        # …and once a step has been PLAYED, the card goes: he is using the tool,
+        # a typo is no longer the question, and on a phone it was a full card of
+        # scroll above the board (Rogzy 2026-10-06). A grid gone bad brings it back.
+        broken = doubled or n_sol == 0
+        op = " open" if (broken or err) else ""
+        if not played or broken:
+            body.append(
+                f'<section class="card"><details class="fix"{op}><summary>✏️ Corriger '
+                'la grille</summary><p class="muted small">Une correction repart des '
+                'chiffres seuls : les éliminations déjà jouées avaient été prouvées '
+                'sur l\'ancienne grille, elles ne valent plus rien sur celle-ci.</p>'
+                + entry + '</details></section>')
 
     if cells is None:
         # ⚠ Pas de carte « À quoi ça sert », et pas de ligne « tape les chiffres »
@@ -1460,7 +1468,8 @@ def assistant_page(cells_s="", elims_s="", pick=None, err=""):
         f'<form method="post" action="">'
         f'<input type="hidden" name="cells" value="{la.esc(cells_now)}">'
         f'<input type="hidden" name="elims" value="{la.esc(elims_now)}">'
-        f'<select name="pick" aria-label="Le coup à regarder">'
+        + ('<input type="hidden" name="played" value="1">' if played else '')
+        + f'<select name="pick" aria-label="Le coup à regarder">'
         f'{_move_options(steps, sel)}</select>'
         f'{_move_detail(steps[sel])}'
         f'<div class="tools">'
@@ -1997,9 +2006,10 @@ class SudokuHandler(la.Handler):
             if op == "apply" and pick is not None:
                 cells_s, elims_s, why = assistant_apply(cells_s, elims_s, pick)
                 return self.send_html(assistant_page(
-                    cells_s, elims_s, err=why))
+                    cells_s, elims_s, err=why, played=True))
             return self.send_html(assistant_page(
-                cells_s, elims_s, pick=pick if op == "show" else None, err=bad))
+                cells_s, elims_s, pick=pick if op == "show" else None, err=bad,
+                played=f.get("played") == "1" and op != "analyse"))
         if clean == "/import":
             f = la.parse_form(raw)
             text, bad = cells_from_form(f, "text")

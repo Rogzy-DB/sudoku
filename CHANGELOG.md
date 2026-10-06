@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.11.6 — 2026-10-06
+
+- Assistant: the « Corriger la grille » card disappears once a step has been played (it comes back if the grid turns out broken).
+- Space under every card header (the counters were touching the grid and the move menu).
+
 ## 0.11.5 — 2026-10-05
 
 - The footer's GitHub link points to this repository.
