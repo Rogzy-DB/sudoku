@@ -1324,7 +1324,8 @@ def _move_detail(st):
             f'</div>')
 
 
-def assistant_page(cells_s="", elims_s="", pick=None, err="", played=False):
+def assistant_page(cells_s="", elims_s="", pick=None, err="", played=False,
+                   from_game=False):
     """Rogzy 2026-09-15: *« une option / tab assistant, ou je peux ecrir ma grille
     actuel, faire indicie, et ca me propose des solution, a la fois de crayons, de
     réduction des crayon par guess, puis de la resolution case par case mais en me
@@ -1395,7 +1396,10 @@ def assistant_page(cells_s="", elims_s="", pick=None, err="", played=False):
         # scroll above the board (Rogzy 2026-10-06). A grid gone bad brings it back.
         broken = doubled or n_sol == 0
         op = " open" if (broken or err) else ""
-        if not played or broken:
+        # From a GAME (`?g=`), never: what he would fix here does not flow back
+        # to his game, so even a broken position gets a pointer to the board
+        # instead (Rogzy 06/10, seen on a game with a doubled digit).
+        if not from_game and (not played or broken):
             body.append(
                 f'<section class="card"><details class="fix"{op}><summary>✏️ Corriger '
                 'la grille</summary><p class="muted small">Une correction repart des '
@@ -1421,7 +1425,8 @@ def assistant_page(cells_s="", elims_s="", pick=None, err="", played=False):
     if doubled:
         note = ('<p class="bad">Un chiffre apparaît deux fois dans une même ligne, '
                 'colonne ou boîte. Rien de ce qui suit ne voudrait dire quoi que ce '
-                'soit : corrige la saisie d\'abord.</p>')
+                + ('soit : corrige-le sur le plateau de ta partie, puis reviens.</p>'
+                   if from_game else 'soit : corrige la saisie d\'abord.</p>'))
     elif n_sol == 0:
         note = ('<p class="bad">Cette grille n\'a aucune solution : il y a une '
                 'erreur quelque part. Corrige-la avant de demander un coup — '
@@ -1920,7 +1925,11 @@ class SudokuHandler(la.Handler):
             # l'assistant reproposerait des coups que la partie a déjà joués.
             gg = store.load_game(q["g"]) if q.get("g") else None
             if gg:
-                return self.send_html(assistant_page(gg["cells"], fmt_elims(_elims(gg))))
+                # …et sans ✏️ Corriger : la position vient de SA partie, pas d'une
+                # saisie — il n'y a pas de faute de frappe à rattraper (Rogzy 06/10)
+                return self.send_html(assistant_page(
+                    gg["cells"], fmt_elims(_elims(gg)), played=True,
+                    from_game=True))
             return self.send_html(assistant_page())
         m = RE_FICHE.match(clean)
         if m:

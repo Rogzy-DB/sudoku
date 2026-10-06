@@ -656,6 +656,10 @@ class TestItIsActuallyServed(Isolated):
         self.assertIn('name="cells"', body)
         self.assertIn(game["cells"], body)
         self.assertNotIn("Ta grille", body, "it fell back to the empty page")
+        # Rogzy 06/10 : la position vient de SA partie — ✏️ Corriger n'a rien à
+        # rattraper, et `played` doit voyager pour que 👁 Montrer ne la ramène pas
+        self.assertNotIn('<details class="fix"', body)
+        self.assertIn('name="played" value="1"', body)
 
     def test_a_typed_grid_posted_to_the_import_tab_opens_the_game(self):
         """The whole reason the redirect target had to change. Posted from

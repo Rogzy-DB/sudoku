@@ -490,6 +490,19 @@ class TestTypingTheGrid(unittest.TestCase):
         html = app.assistant_page(G.to_string(cells), played=True)
         self.assertIn('<details class="fix" open>', html)
 
+    def test_from_a_GAME_the_fix_card_never_shows_even_broken(self):
+        """Fixing here does not flow back to his game: the note points at the
+        board instead (Rogzy 06/10 — his game had a doubled digit)."""
+        cells = G.parse(self.GRID)
+        i = next(n for n in range(81) if not cells[n])
+        row = [cells[j] for j in range(i // 9 * 9, i // 9 * 9 + 9) if cells[j]]
+        cells[i] = row[0]
+        html = app.assistant_page(G.to_string(cells), played=True, from_game=True)
+        self.assertNotIn('<details class="fix"', html)
+        self.assertIn("sur le plateau de ta partie", html)
+        self.assertIn('<details class="fix" open>',
+                      app.assistant_page(G.to_string(cells), played=True))
+
     def test_a_box_I_could_not_read_re_opens_them_too(self):
         """Naming R1C5 and then folding R1C5 out of sight is half a message.
         Found on the live page, not in a test: the grid still PARSES when an

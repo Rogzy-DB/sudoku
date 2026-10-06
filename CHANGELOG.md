@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.11.7 — 2026-10-06
+
+- Assistant opened from a game: no « Corriger la grille » card, even on a broken position (fixing it there would not reach the game); the note points back to the board.
+
 ## 0.11.6 — 2026-10-06
 
 - Assistant: the « Corriger la grille » card disappears once a step has been played (it comes back if the grid turns out broken).
